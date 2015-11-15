@@ -94,17 +94,29 @@ static vDSP_Length const FFTViewControllerFFTWindowSize = 4096;
     __weak typeof (self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         
-        if (maxFrequency >= (FREQUENCE_THRESH - FREQUENCE_STEP*2)) {
-            //NSLog(@"receive .frequency:%f",maxFrequency);
+        if (maxFrequency >= (FREQUENCE_THRESH - FREQUENCE_STEP*6)) {
+            NSLog(@"receive .frequency:%f",maxFrequency);
             //将频率转化为对应的char
-            if (maxFrequency <= FREQUENCE_THRESH) {
+            if (maxFrequency < FREQUENCE_THRESH - FREQUENCE_STEP) {
                 //分隔期
-                NSLog(@"分隔信号");
+                
+                //抗干扰
+                int rightF = GAP_FREQUENCE;
+                //if (abs(rightF - maxFrequency) < 20) {
+                    NSLog(@"分隔信号");
+                //}
+                
             }else{
                 int charValue = (maxFrequency - FREQUENCE_THRESH)/FREQUENCE_STEP;
-                NSLog(@"f:%f charValue:%d",maxFrequency,charValue);
+                //NSLog(@"f:%f charValue:%d",maxFrequency,charValue);
                 unsigned char chr = charValue;
-                NSLog(@"chr:%c",chr);
+                //抗干扰
+                int rightF = FREQUENCE_THRESH + FREQUENCE_STEP/2 + chr*FREQUENCE_STEP;
+                //if (abs(rightF - maxFrequency) < 30) {
+                    NSLog(@"chr:%d",chr);
+                //}
+                
+                
             
             }
             

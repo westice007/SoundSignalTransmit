@@ -24,7 +24,7 @@
 @end
 
 
-static unsigned char testChrs[8] = {'B','o','o','k','i','s','m','y'};
+static unsigned char testChrs[8] = {2,12,24,32,44,56,60,63};
 
 @implementation Speaker
 
@@ -54,7 +54,7 @@ static unsigned char testChrs[8] = {'B','o','o','k','i','s','m','y'};
     
     [self.outPut startPlayback];
     
-    //self.timer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(timerHandler) userInfo:nil repeats:YES];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:0.01 target:self selector:@selector(timerHandler) userInfo:nil repeats:YES];
     
     
     
@@ -62,7 +62,38 @@ static unsigned char testChrs[8] = {'B','o','o','k','i','s','m','y'};
 
 
 -(void)timerHandler{
-    NSLog(@"test:%f",CFAbsoluteTimeGetCurrent());
+    //NSLog(@"test:%f",CFAbsoluteTimeGetCurrent());
+    
+    
+    double timeElapse = CFAbsoluteTimeGetCurrent() - self.microSecAcc;
+    
+    //NSLog(@"timeElapse:%f",timeElapse);
+    if (timeElapse <= ONE_SIGNAL_TIME + ONE_GAP_SIGNAL_TIME) {
+        
+        if (timeElapse < ONE_SIGNAL_TIME) {
+            if (self.signalIndex >= sizeof(testChrs)) {
+                self.signalIndex = 0;
+            }
+            unsigned char chr = testChrs[self.signalIndex];
+            self.frequency = FREQUENCE_THRESH + FREQUENCE_STEP/2 + chr*FREQUENCE_STEP;
+            
+            NSLog(@"send chr:%d .frequency:%f",chr,self.frequency);
+            
+        }else{
+            //信号走完，开始分隔信号
+            self.frequency = GAP_FREQUENCE;
+            NSLog(@"send gap frequence:%f",self.frequency);
+        }
+        
+    }else{
+        //分隔信号信号走完,开始下一个
+        self.signalIndex++;
+        self.microSecAcc = CFAbsoluteTimeGetCurrent();
+        
+        
+    }
+    
+    
 }
 
 -(void)stop{
@@ -81,37 +112,7 @@ static unsigned char testChrs[8] = {'B','o','o','k','i','s','m','y'};
         withNumberOfFrames:(UInt32)frames
                  timestamp:(const AudioTimeStamp *)timestamp
 {
-    
-    
-    double timeElapse = CFAbsoluteTimeGetCurrent() - self.microSecAcc;
-    
-    //NSLog(@"timeElapse:%f",timeElapse);
-    if (timeElapse <= ONE_SIGNAL_TIME + ONE_GAP_SIGNAL_TIME) {
-        
-        if (timeElapse < ONE_SIGNAL_TIME) {
-            if (self.signalIndex >= sizeof(testChrs)) {
-                self.signalIndex = 0;
-            }
-            unsigned char chr = testChrs[self.signalIndex];
-            self.frequency = FREQUENCE_THRESH + FREQUENCE_STEP/2 + chr*FREQUENCE_STEP;
-            
-            NSLog(@"send chr:%c .frequency:%f",chr,self.frequency);
-            
-        }else{
-            //信号走完，开始分隔信号
-            self.frequency = FREQUENCE_THRESH - FREQUENCE_STEP/2;
-            NSLog(@"send gap frequence:%f",self.frequency);
-        }
-        
-    }else{
-        //分隔信号信号走完,开始下一个
-        self.signalIndex++;
-        self.microSecAcc = CFAbsoluteTimeGetCurrent();
-        
-        
-    }
-    
-    
+
     
     Float32 *buffer = (Float32 *)audioBufferList->mBuffers[0].mData;
     size_t bufferByteSize = (size_t)audioBufferList->mBuffers[0].mDataByteSize;
